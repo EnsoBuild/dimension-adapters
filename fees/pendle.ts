@@ -30,6 +30,7 @@ type IConfig = {
 const STETH_ETHEREUM = "ethereum:" + ADDRESSES.ethereum.STETH;
 const EETH_ETHEREUM = "ethereum:" + ADDRESSES.ethereum.EETH;
 const WETH_ETHEREUM = "ethereum:" + ADDRESSES.ethereum.WETH;
+const USDT_ETHEREUM = "ethereum:" + ADDRESSES.ethereum.USDT;
 
 const AIRDROP_DISTRIBUTOR = '0x3942F7B55094250644cFfDa7160226Caa349A38E'
 
@@ -79,6 +80,12 @@ const chainConfig: IConfig = {
   },
   [CHAIN.BERACHAIN]: {
     treasury: "0xC328dFcD2C8450e2487a91daa9B75629075b7A43"
+  }, 
+  [CHAIN.PLASMA]: {
+    treasury: "0xCbcb48e22622a3778b6F14C2f5d258Ba026b05e6"
+  },
+  [CHAIN.HYPERLIQUID]: {
+    treasury: "0x17A191644E750AA24a5ec13A253b9446f4eF178b"
   }
 };
 
@@ -210,13 +217,14 @@ const fetch = (chain: Chain) => {
     }
 
     // these revenue should be counted in fees too
-    dailyRevenue.addBalances(
-      await addTokensReceived({
-        options,
-        target: AIRDROP_DISTRIBUTOR,
-      })
-    )
+    const tokenToDistributor = await addTokensReceived({
+      options,
+      target: AIRDROP_DISTRIBUTOR,
+    })
 
+    tokenToDistributor.removeTokenBalance(USDT_ETHEREUM) // ignore USDT airdrop
+
+    dailyRevenue.addBalances(tokenToDistributor)
     dailyFees.addBalances(dailyRevenue);
     dailyFees.addBalances(dailySupplySideRevenue);
 
@@ -277,6 +285,14 @@ const adapter: SimpleAdapter = {
     [CHAIN.BERACHAIN]: {
       fetch: fetch(CHAIN.BERACHAIN),
       start: '2025-02-07',
+    }, 
+    [CHAIN.PLASMA]: {
+      fetch: fetch(CHAIN.PLASMA),
+      start: '2025-09-24',
+    },
+    [CHAIN.HYPERLIQUID]: {
+      fetch: fetch(CHAIN.HYPERLIQUID),
+      start: '2025-07-09',
     }
   },
 };
